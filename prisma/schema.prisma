@@ -1,0 +1,94 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Users {
+  id                         Int                          @id @default(autoincrement())
+  uuid                       String                       @unique @default(uuid())
+  firstName                  String                       @db.VarChar(200)
+  lastName                   String                       @db.VarChar(200)
+  email                      String                       @unique
+  password                   String
+  verified                   Boolean                      @default(false)
+  createdAt                  DateTime                     @default(now())
+  updatedAt                  DateTime                     @updatedAt
+  Role                       Roles[]
+  Notification               Notifications[]
+  UserNotificationPreference UserNotificationPreference[]
+
+  @@index([id, email])
+}
+
+model NotificationPreference {
+  id                          Int                          @id @default(autoincrement())
+  type                        NotificationType
+  userNotificationPreferences UserNotificationPreference[]
+}
+
+enum NotificationType {
+  EMAIL
+  SMS
+  INAPP
+}
+
+model UserNotificationPreference {
+  id                       Int                    @id @default(autoincrement())
+  userId                   Int
+  notificationPreferenceId Int
+  startTime                DateTime               @db.Time(3)
+  endTime                  DateTime               @db.Time(3)
+  isActive                 Boolean                @default(true)
+  user                     Users                  @relation(fields: [userId], references: [id])
+  notificationPreference   NotificationPreference @relation(fields: [notificationPreferenceId], references: [id])
+
+  @@unique([userId, notificationPreferenceId])
+}
+
+model Roles {
+  uuid      String   @unique @default(uuid())
+  id        Int      @id @default(autoincrement())
+  name      String   @unique @db.VarChar(200)
+  status    Int      @default(1) @db.TinyInt() //1-active 2- not active
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      Users[]
+
+  @@index([id])
+}
+
+model Notifications {
+  id                 Int                @id @default(autoincrement())
+  uuid               String             @unique @default(uuid())
+  userId             Int                @db.Int()
+  description        String             @db.Text
+  isRead             Int                @default(2) @db.TinyInt()
+  notificationType   Int                @db.Int()
+  isDeleted          Int                @default(1) @db.TinyInt() //1-not deleted 2- deleted
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  users              Users[]
+  Notification_Types NotificationTypes? @relation(fields: [notificationType], references: [id])
+
+  @@index([userId, uuid])
+}
+
+model NotificationTypes {
+  id            Int             @id @default(autoincrement())
+  uuid          String          @unique @default(uuid())
+  name          String          @db.VarChar(200)
+  description   String?         @db.Text
+  isDeleted     Int             @default(1) @db.TinyInt() //1-not deleted 2- deleted
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  notifications Notifications[]
+
+  @@index([id, uuid])
+}
