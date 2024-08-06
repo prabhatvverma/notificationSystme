@@ -15,6 +15,6 @@ routes.get('/', (req, res) => {
   );
 });
 // Authentication
-routes.get(`${nameSpace}signUp`, UsersController.get);
+routes.get(`${nameSpace}signUp`, UsersController.create);
 
 export default routes;
